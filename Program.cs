@@ -8,8 +8,9 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // SQL Server connection
+// PostgreSQL connection
 builder.Services.AddDbContext<AidaDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // JWT Auth
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
