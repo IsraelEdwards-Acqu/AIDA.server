@@ -9,17 +9,41 @@ namespace AIDA.Server.Controllers
     public class ChatController : ControllerBase
     {
         private readonly ChatService _chatService;
+        private readonly TranslationService _translator;
 
-        public ChatController(ChatService chatService)
+        public ChatController(ChatService chatService, TranslationService translator)
         {
             _chatService = chatService;
+            _translator = translator;
         }
 
         [HttpPost("send")]
         public async Task<IActionResult> SendMessage(ChatDto dto)
         {
-            var response = await _chatService.ProcessMessage(dto);
-            return Ok(response);
+            var lang = string.IsNullOrEmpty(dto.Language) ? "en" : dto.Language;
+            var userMessage = dto.Message;
+
+            // If user selected French, translate input to English
+            if (lang == "fr")
+            {
+                userMessage = await _translator.TranslateAsync(userMessage, "en");
+            }
+
+            // Generate bot response in English
+            var botResponse = await _chatService.ProcessMessage(new ChatDto
+            {
+                StudentId = dto.StudentId,
+                Message = userMessage,
+                Language = "en"
+            });
+
+            // If user selected French, translate output back to French
+            if (lang == "fr")
+            {
+                botResponse = await _translator.TranslateAsync(botResponse, "fr");
+            }
+
+            return Ok(new { response = botResponse });
         }
 
         [HttpGet("history/{studentId}")]
@@ -36,5 +60,4 @@ namespace AIDA.Server.Controllers
             return Ok(ticket);
         }
     }
-
 }

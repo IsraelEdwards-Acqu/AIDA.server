@@ -51,6 +51,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Azure.AI.Translation.Text": {
+              "target": "Package",
+              "version": "[2.0.0, )"
+            },
             "BCrypt.Net-Next": {
               "target": "Package",
               "version": "[4.2.0, )"
@@ -80,6 +84,10 @@
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",
               "version": "[8.19.1, )"
+            },
+            "System.Text.Json": {
+              "target": "Package",
+              "version": "[10.0.9, )"
             }
           },
           "imports": [

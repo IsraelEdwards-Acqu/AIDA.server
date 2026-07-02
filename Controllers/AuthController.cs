@@ -3,6 +3,7 @@ using AIDA.Server.Helpers;
 using AIDA.Server.Models;
 using AIDA.Server.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace AIDA.Server.Controllers
 {
@@ -27,11 +28,16 @@ namespace AIDA.Server.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(StudentLoginDto dto)
         {
-            var token = await _authService.Login(dto);
-            if (token == null)
+            var loginResult = await _authService.Login(dto);
+
+            if (loginResult == null || string.IsNullOrEmpty(loginResult.Token))
                 return Unauthorized(new { message = "Invalid credentials" });
 
-            return Ok(new { token });
+            return Ok(new
+            {
+                token = loginResult.Token,
+                studentId = loginResult.StudentId
+            });
         }
     }
 }

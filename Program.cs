@@ -34,6 +34,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<TicketService>();
 builder.Services.AddScoped<KnowledgeService>();
+builder.Services.AddHttpClient<TranslationService>();
 
 var app = builder.Build();
 
