@@ -1,4 +1,4 @@
-using AIDA.Server.Data;
+﻿using AIDA.Server.Data;
 using AIDA.Server.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,8 +7,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// SQL Server connection
-// PostgreSQL connection
+// Database connection
 builder.Services.AddDbContext<AidaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -27,6 +26,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// ✅ Add CORS policy to allow Netlify frontend
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowNetlify",
+        policy => policy.WithOrigins(
+            "https://aidabort.netlify.app",        // your Netlify site
+            "https://6a4ac4c90c21521564c0dcf7--aidabort.netlify.app" // Netlify preview/deploy URL
+        )
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+});
+
 builder.Services.AddControllers();
 
 // Register services
@@ -38,8 +49,12 @@ builder.Services.AddHttpClient<TranslationService>();
 
 var app = builder.Build();
 
+// ✅ Enable CORS before auth
+app.UseCors("AllowNetlify");
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();
