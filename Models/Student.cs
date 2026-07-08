@@ -5,6 +5,7 @@
         public int StudentId { get; set; }
         public string Name { get; set; }
         public string PasswordHash { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string Email { get; set; } // ✅ add
+        public DateTime CreatedAt { get; set; }
     }
 }

@@ -33,6 +33,35 @@ namespace AIDA.Server.Services
             return entry;
         }
 
+        // ✅ New: Get all entries
+        public async Task<List<KnowledgeEntry>> GetAllEntries()
+        {
+            return await _context.KnowledgeBase.ToListAsync();
+        }
+
+        // ✅ New: Update entry
+        public async Task<bool> UpdateEntry(int id, KnowledgeDto dto)
+        {
+            var entry = await _context.KnowledgeBase.FindAsync(id);
+            if (entry == null) return false;
+
+            entry.Question = dto.Question;
+            entry.Answer = dto.Answer;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // ✅ New: Delete entry
+        public async Task<bool> DeleteEntry(int id)
+        {
+            var entry = await _context.KnowledgeBase.FindAsync(id);
+            if (entry == null) return false;
+
+            _context.KnowledgeBase.Remove(entry);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<KnowledgeEntry?> PromoteChat(int chatId)
         {
             var chat = await _context.Chats.FindAsync(chatId);

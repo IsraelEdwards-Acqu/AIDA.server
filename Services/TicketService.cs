@@ -21,7 +21,8 @@ namespace AIDA.Server.Services
                 StudentId = dto.StudentId,
                 Category = dto.Category,
                 Subject = dto.Subject,
-                Status = "Open"
+                Status = "Open",
+                CreatedAt = DateTime.UtcNow
             };
             _context.Tickets.Add(ticket);
             await _context.SaveChangesAsync();
@@ -31,13 +32,14 @@ namespace AIDA.Server.Services
         public async Task<List<Ticket>> GetTicketsByStudent(int studentId) =>
             await _context.Tickets.Where(t => t.StudentId == studentId).ToListAsync();
 
-        public async Task<Models.AdminResponse> RespondToTicket(int ticketId, AdminResponseDto dto)
+        public async Task<AdminResponse> RespondToTicket(int ticketId, AdminResponseDto dto)
         {
-            var response = new Models.AdminResponse
+            var response = new AdminResponse
             {
                 TicketId = ticketId,
                 AdminId = dto.AdminId,
-                Message = dto.Message
+                Message = dto.Message,
+                CreatedAt = DateTime.UtcNow
             };
             _context.AdminResponses.Add(response);
 
@@ -50,6 +52,24 @@ namespace AIDA.Server.Services
 
             await _context.SaveChangesAsync();
             return response;
+        }
+
+        // ✅ New: Get all tickets
+        public async Task<List<Ticket>> GetAllTickets()
+        {
+            return await _context.Tickets.ToListAsync();
+        }
+
+        // ✅ New: Update ticket status
+        public async Task<bool> UpdateStatus(int ticketId, string status)
+        {
+            var ticket = await _context.Tickets.FindAsync(ticketId);
+            if (ticket == null) return false;
+
+            ticket.Status = status;
+            ticket.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }
