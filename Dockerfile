@@ -2,12 +2,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy csproj and restore dependencies
-COPY *.sln .
-COPY AIDA.Server/*.csproj ./AIDA.Server/
-RUN dotnet restore
+# Copy solution and project files
+COPY AIDA.server.sln .
+COPY AIDA.Server/AIDA.Server.csproj AIDA.Server/
 
-# Copy everything else and build
+RUN dotnet restore AIDA.server.sln
+
+# Copy everything else
 COPY . .
 WORKDIR /src/AIDA.Server
 RUN dotnet publish -c Release -o /app/publish
