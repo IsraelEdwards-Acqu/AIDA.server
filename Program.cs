@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using AIDA.Server.Data;
 using AIDA.Server.Services;
@@ -61,7 +61,7 @@ builder.Services.AddCors(options =>
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials(); // keep if you ever use cookies; otherwise safe to remove
+            .AllowCredentials();
     });
 });
 
@@ -75,66 +75,14 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 var app = builder.Build();
 
-// --- Apply EF migrations and seed a default admin if missing (safe, idempotent)
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var db = services.GetRequiredService<AidaDbContext>();
+// --- Removed migrations and seeding block ---
+// The schema and admin are already created manually in Supabase.
 
-        // Apply pending migrations (creates tables if migrations exist)
-        db.Database.Migrate();
-
-        // Seed admin if none exists
-        var adminUserName = "admin"; // change if you prefer a different username
-        var existing = await db.Admins.FirstOrDefaultAsync(a => a.Username == adminUserName);
-        if (existing == null)
-        {
-            // Read admin password from environment variable (set this in Render)
-            var adminPassword = builder.Configuration["ADMIN_PASSWORD"];
-            if (string.IsNullOrWhiteSpace(adminPassword))
-            {
-                // If no ADMIN_PASSWORD provided, do not create a default admin automatically in production.
-                Console.WriteLine("[Startup] ADMIN_PASSWORD not set; skipping admin seed.");
-            }
-            else
-            {
-                var hash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
-                var admin = new Admin
-                {
-                    Username = adminUserName,
-                    PasswordHash = hash,
-                    CreatedAt = DateTime.UtcNow
-                };
-                db.Admins.Add(admin);
-                await db.SaveChangesAsync();
-                Console.WriteLine("[Startup] Seeded admin user 'admin'.");
-            }
-        }
-        else
-        {
-            Console.WriteLine("[Startup] Admin user already exists; skipping seed.");
-        }
-    }
-    catch (Exception ex)
-    {
-        // Log and rethrow so Render logs show the problem
-        Console.WriteLine("[Startup] Error applying migrations or seeding admin: " + ex);
-        throw;
-    }
-}
-
-// Middleware order: routing -> forwarded headers -> CORS -> exception handler -> logging -> auth -> endpoints
+// Middleware order
 app.UseRouting();
-
-// Apply forwarded headers first so the request scheme is correct (X-Forwarded-Proto)
 app.UseForwardedHeaders();
-
-// Apply CORS early so preflight (OPTIONS) is handled and responses include CORS headers
 app.UseCors("AllowFrontend");
 
-// Global exception handler that returns JSON and preserves CORS headers
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
@@ -154,7 +102,6 @@ app.UseExceptionHandler(errorApp =>
     });
 });
 
-// Lightweight request logging to help debug 4xx/5xx and CORS issues
 app.Use(async (context, next) =>
 {
     var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("RequestLogger");
@@ -163,10 +110,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// On Render the TLS is terminated at the load balancer; UseHttpsRedirection can warn if not configured.
-// It's safe to keep UseHttpsRedirection after UseForwardedHeaders so scheme is correct.
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
